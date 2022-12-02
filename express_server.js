@@ -113,6 +113,44 @@ app.post('/login', (req, res) => {
     res.status(403).redirect('/login?failed=true');
   }
 });
+//Register page 
+app.get('/register', (req, res) => {
+  if (users[req.session['user_id']]) {
+    res.redirect('/urls');
+    return;
+  }
+  let userExists = req.query.userExists ? true : false;
+  const templateVars = {
+    user: users[req.session['user_id']],
+    userExists
+  };
+  res.render('urls_register', templateVars);
+});
+
+app.post('/register', (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) {
+    console.log('please make sure to provide all required information');
+    res.status(400).redirect('/register');
+    return;
+  }
+  if (checkIfUserExists(users, email)) {
+    console.log('user with the given email already exists in the db');
+    res.status(400).redirect('/register?userExists=true');
+    return;
+  }
+  const id = generateRandomString();
+  const newUser = {
+    id,
+    name,
+    email,
+    password: bcrypt.hashSync(password, 10)
+  };
+  users[id] = newUser;
+  req.session['user_id'] = id;
+  res.redirect('/');
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
