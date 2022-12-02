@@ -1,10 +1,10 @@
 {
   "name": "tinyapp",
   "version": "1.0.0",
-  "description": "",
+  "description": "this is a lighthouselabs project for week 3.",
   "main": "index.js",
   "scripts": {
-    "start": "./node_modules/.bin/nodemon -L express_server.js",
+    "start": "nodemon -L express_server.js",
     "test": "./node_modules/mocha/bin/mocha"
   },
   "repository": {
@@ -12,22 +12,27 @@
     "url": "git+https://github.com/Ellie-Aghajani/tinyapp.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Zeynab Aghajani",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Ellie-Aghajani/tinyapp/issues"
   },
   "homepage": "https://github.com/Ellie-Aghajani/tinyapp#readme",
   "dependencies": {
+    "@types/cookie-parser": "^1.4.3",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cookie-session": "^2.0.0",
     "ejs": "^3.1.8",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "method-override": "^3.0.0"
   },
   "devDependencies": {
     "chai": "^4.3.7",
     "mocha": "^10.1.0",
     "nodemon": "^2.0.20"
+  },
+  "directories": {
+    "test": "test"
   }
 }

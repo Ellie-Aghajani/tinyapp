@@ -1,9 +1,11 @@
+/////////////////////////////////  Config /////////////////////////////////////
 const express = require('express');
 const app = express();
 const PORT = 8080;
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override')
 const { checkIfUserExists, findUser, returnUsersUrls, generateRandomString } = require('./helper.js');
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -11,7 +13,7 @@ app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2'],
 }));
-
+app.use(methodOverride('_method'))
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
@@ -22,7 +24,7 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 const users = {};
-
+/////////////////////////////////  App Routes /////////////////////////////////
 // First page
 app.get('/', (req, res) => {
   res.redirect('/urls');
@@ -173,6 +175,8 @@ app.post('/logout', (req, res) => {
   req.session['user_id'] = null;
   res.redirect('/');
 });
+
+
 
 //Register page 
 app.get('/register', (req, res) => {
