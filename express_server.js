@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const { checkIfUserExists, findUser, returnUsersUrls, generateRandomString } = require('./helper.js');
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
