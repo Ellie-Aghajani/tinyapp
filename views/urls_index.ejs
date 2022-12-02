@@ -1,56 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+      content="width=device-width, initial-scale=1 shrink-to-fit=no"
     />
 
-    <!-- Bootstrap CSS -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
+
     <title>TinyApp</title>
   </head>
+
   <body>
-    <%- include('partials/_header')%>
-    <main style="margin: 1em;">
+    <div><%- include('./partials/_header'); %></div>
+    <main style="margin: 1em">
+      <% if(denied) {%>
+      <div class="alert alert-danger" role="alert">
+        Please only access url's that belong to you
+      </div>
+      <%} else if(doesntExist){%>
+      <div class="alert alert-danger" role="alert">
+        Seems like that shortURL doesnt exist
+      </div>
+      <%} %>
       <h3>My URLs</h3>
+      <!-- <script type="text/javascript">
+        let user = '<%=user %>'
+        if(!user) {
+          alert('Please make sure to login or register for an account');
+          window.location.replace("/login");
+        }
+      </script> -->
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Short URL ID</th>
+            <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
             <th scope="col">Edit</th>
             <th scope="col">Delete</th>
-
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
-            <tr>
-              <td><%= id %></td>
-              <td><%= urls[id] %></td>
-              <td>
-                <form method="GET" action="/urls/<%= id %>">
-                  <button class= "btn btn-outline-primary" >Edit</button>
-                </form>
-              </td>
-              <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <button class="btn btn-outline-danger">Delete</button>
-                </form>
-              </td>
-            </tr>
-          <% } %>
+          <% for(let url in urls){%>
+          <tr>
+            <td><a href="/urls/<%=url%>"><%= url %></a></td>
+            <td><%= urls[url].longURL %></td>
+            <td>
+              <a href="/urls/<%=url%>">
+                <button class="btn btn-outline-primary">Edit</button>
+              </a>
+            </td>
+            <td>
+              <form action="/urls/<%=url%>?_method=DELETE" method="POST">
+                <button class="btn btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          <%} %>
         </tbody>
       </table>
     </main>
-    <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
