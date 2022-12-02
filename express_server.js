@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
-
+const bcrypt = require('bcrypt');
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
@@ -13,72 +13,123 @@ app.use(cookieSession({
   keys: ['key1', 'key2'],
 }));
 
-const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-function generateString(length) {
-    let result = ' ';
-    const charactersLength = characters.length;
-    for ( let i = 0; i < length; i++ ) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
 
-    return result;
-};
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 const users = {};
-/////////////////////////////////  App Routes /////////////////////////////////
+
 // First page
 app.get('/', (req, res) => {
   res.redirect('/urls');
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-app.get("/urls.json", (req, res) => {
+app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+
+app.get('/urls.users.json', (req, res) => {
+  res.json(users);
 });
+
+//Go to create new url page
+app.get('/urls/new', (req, res) => {
+  if (!users[req.session['user_id']]) {
+    res.redirect('/login?reroute=true');
+    return;
+  }
+  const templateVars = {
+    user: users[req.session['user_id']]
+  };
+  res.render('urls_new', templateVars);
+});
+
+//Main page
 app.get('/urls', (req, res) => {
-  let templateVars = {urls : urlDatabase}
-  res.render("urls_index",  templateVars);
+  if (!users[req.session['user_id']]) {
+    res.redirect('/login?reroute=true');
+    return;
+  }
+  let doesntExist = req.query.doesntExist ? true : false;
+  let denied = req.query.denied ? true : false;
+  let usersUrls = returnUsersUrls(urlDatabase, req.session['user_id']);
+  const templateVars = {
+    urls: usersUrls,
+    user: users[req.session['user_id']],
+    denied,
+    doesntExist
+  };
+  res.render('urls_index', templateVars);
 });
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+
+
+//Go to a specific shortURL
+app.get('/urls/:shortURL', (req, res) => {
+  if (!urlDatabase[req.params.shortURL]) {
+    res.status(404).redirect('/urls?doesntExist=true');
+    return;
+  }
+  if (urlDatabase[req.params.shortURL].userID !== req.session['user_id']) {
+    res.status(403).redirect('/urls?denied=true');
+    return;
+  }
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    url: urlDatabase[req.params.shortURL],
+    user: users[req.session['user_id']]
+  };
+  res.render('urls_show', templateVars);
 });
-app.get("/urls/:id", (req, res) => {
-  let templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]};
-  res.render("urls_show", templateVars);
+
+//Go to longURL 
+app.get('/u/:shortURL', (req, res) => {
+  if (!urlDatabase[req.params.shortURL]) {
+    res.status(404).redirect('/urls?doesntExist=true');
+    return;
+  }
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
 });
-app.post("/urls", (req, res) => {
-  let randomString = generateString(6);
-  urlDatabase[randomString] = req.body.longURL;
+
+
+//Creates a new shortURL
+app.post('/urls', (req, res) => {
+  let randomString = generateRandomString();
+  urlDatabase[randomString] = {
+    longURL: req.body.longURL,
+    userID: req.session['user_id'],
+  };
   res.redirect(`/urls/${randomString}`);
 });
 
-app.post("/urls/:id/delete", (req, res) => {
 
+//Update (edit) longURL
+app.put('/urls/:id', (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).userIDredirect('/urls?doesntExist=true');
+    return;
+  }
+  if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
+    res.status(403).redirect('/urls?denied=true');
+    return;
+  }
+  urlDatabase[req.params.id].longURL = req.body.longURL;
+  res.redirect('/');
+});
+
+//Delete shortURL form list 
+app.delete('/urls/:id', (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.status(404).userIDredirect('/urls?doesntExist=true');
+    return;
+  }
+  if (urlDatabase[req.params.id].userID !== req.session['user_id']) {
+    res.status(403).redirect('/urls?denied=true');
+    return;
+  }
   delete urlDatabase[req.params.id];
-  res.redirect('/urls');
-});
-
-
-
-app.get("/urls/:id", (req, res) => {
-  res.render('/urls');
-});
-
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  res.redirect('/urls');
-});
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  res.redirect('/');
 });
 
 //Login 
@@ -113,6 +164,13 @@ app.post('/login', (req, res) => {
     res.status(403).redirect('/login?failed=true');
   }
 });
+
+// Logout
+app.post('/logout', (req, res) => {
+  req.session['user_id'] = null;
+  res.redirect('/');
+});
+
 //Register page 
 app.get('/register', (req, res) => {
   if (users[req.session['user_id']]) {
