@@ -1,24 +1,21 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
-const methodOverride = require('method-override')
 const { checkIfUserExists, findUser, returnUsersUrls, generateRandomString } = require('./helper.js');
-app.use(express.urlencoded({ extended: true }));
-
-app.set("view engine", "ejs");
+app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2'],
 }));
 
-app.use(methodOverride('_method'))
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
+
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -215,6 +212,3 @@ app.post('/register', (req, res) => {
   res.redirect('/');
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
